@@ -5,7 +5,7 @@ RUN apt-get update && apt-get install -y make pkg-config build-essential
 
 # install Golang
 ARG TARGETARCH
-RUN wget -qO- "https://golang.org/dl/go1.21.0.linux-${TARGETARCH}.tar.gz" | tar -C /usr/local -xzf -
+RUN wget -qO- "https://golang.org/dl/go1.26.4.linux-${TARGETARCH}.tar.gz" | tar -C /usr/local -xzf -
 ENV GOROOT="/usr/local/go"
 ENV GOPATH="$HOME/go"
 ENV PATH="${PATH}:$GOROOT/bin:$GOPATH/bin"
@@ -13,7 +13,12 @@ ENV PATH="${PATH}:$GOROOT/bin:$GOPATH/bin"
 # bring in and build project go code
 WORKDIR /code/go-whosonfirst-libpostal
 RUN git clone https://github.com/whosonfirst/go-whosonfirst-libpostal.git .
-RUN GO111MODULE=off make bin
+RUN go mod init wof-libpostal-server && \
+    go get github.com/facebookgo/grace/gracehttp && \
+    go get github.com/whosonfirst/go-whosonfirst-libpostal/http && \
+    go get github.com/whosonfirst/go-whosonfirst-log && \
+    mkdir -p bin && \
+    go build -mod=mod -o bin/wof-libpostal-server cmd/wof-libpostal-server.go
 
 # start of main image
 FROM pelias/libpostal_baseimage
